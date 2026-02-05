@@ -2,15 +2,33 @@
 
 import { useState } from "react";
 
-export default function ZoneCard() {
-  const [temperature, setTemperature] = useState(72);
+interface ZoneCardProps {
+  title: string;
+  unit: string;
+  setpoint: number;
+  zoneTemp: string;
+  humidity: string;
+  unitStatus: string;
+  supply: string;
+}
+
+export default function ZoneCard({
+  title,
+  unit,
+  setpoint,
+  zoneTemp,
+  humidity,
+  unitStatus,
+  supply,
+}: ZoneCardProps) {
+  const [temperature, setTemperature] = useState(setpoint);
 
   return (
     <div className="flex w-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        Basement
+        {title}
       </h2>
-      <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">HP-1</p>
+      <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">{unit}</p>
 
       <div className="mt-4 flex items-center justify-between">
         <span className="text-4xl font-light text-zinc-900 dark:text-zinc-100">
@@ -32,11 +50,25 @@ export default function ZoneCard() {
         </div>
       </div>
 
-      {/* Space for additional metrics */}
-      <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-        <p className="text-xs text-zinc-400 dark:text-zinc-500">
-          No additional metrics
-        </p>
+      <div className="mt-4 flex flex-col gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+        <div className="flex justify-between text-xs">
+          <span className="text-zinc-400 dark:text-zinc-500">Zone Temp</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{zoneTemp}</span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-zinc-400 dark:text-zinc-500">Humidity</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{humidity}</span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-zinc-400 dark:text-zinc-500">Unit Status</span>
+          <span className="text-green-600 dark:text-green-400">
+            {unitStatus}
+          </span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-zinc-400 dark:text-zinc-500">Supply</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{supply}</span>
+        </div>
       </div>
     </div>
   );
