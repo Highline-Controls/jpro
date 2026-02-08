@@ -22,6 +22,7 @@ export default function ZoneCard({
   supply,
 }: ZoneCardProps) {
   const [temperature, setTemperature] = useState(setpoint);
+  const [mode, setMode] = useState("Off");
 
   return (
     <div className="flex w-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -68,6 +69,27 @@ export default function ZoneCard({
         <div className="flex justify-between text-xs">
           <span className="text-zinc-400 dark:text-zinc-500">Supply</span>
           <span className="text-zinc-700 dark:text-zinc-300">{supply}</span>
+        </div>
+      </div>
+
+      <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+          Mode Control
+        </h3>
+        <div className="mt-2 flex gap-1">
+          {(["Off", "Auto", "Cool", "Heat"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`flex-1 rounded-md border px-1 py-1.5 text-xs font-medium transition-colors ${
+                mode === m
+                  ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                  : "border-zinc-200 text-zinc-600 hover:bg-zinc-100 active:bg-zinc-200 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:active:bg-zinc-700"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
         </div>
       </div>
     </div>
