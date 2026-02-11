@@ -1,0 +1,3 @@
+card1:
+  setpoint: /TestPoints/Setpoint1
+  ZoneTemp: /TestPoints/ZoneTemp

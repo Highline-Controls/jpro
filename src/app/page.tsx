@@ -1,5 +1,7 @@
 import Image from "next/image";
 import ZoneCard from "@/components/ZoneCard";
+import TestNiagaraCard from "@/components/TestNiagaraCard";
+import { loadConfig } from "@/lib/config";
 
 const row1 = [
   {
@@ -98,6 +100,9 @@ const row2 = [
 ];
 
 export default function Home() {
+
+  const cfg = loadConfig();
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <div className="w-full bg-teal-500 px-6 py-4">
@@ -164,6 +169,15 @@ export default function Home() {
           </ul>
         </nav>
         <div className="flex flex-1 flex-col gap-4 p-8">
+          <div className="flex justify-center">
+            <TestNiagaraCard
+              title="Card 1 (Niagara Test)"
+              setpointOrd={cfg.card1.setpoint}
+              zoneTempOrd={cfg.card1.ZoneTemp}
+              pollMs={2000}
+              debounceMs={600}
+            />
+          </div>
           <div className="flex flex-wrap justify-center gap-4">
             {row1.map((zone) => (
               <ZoneCard key={zone.unit} {...zone} />
