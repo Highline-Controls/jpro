@@ -1,3 +1,10 @@
 card1:
-  setpoint: /TestPoints/Setpoint1
-  ZoneTemp: /TestPoints/ZoneTemp
+  SPIn: /Tstat_Testing/SP_IN
+  SPOut: /Tstat_Testing/SP_OUT
+  ModeIn: /Tstat_Testing/MODE_IN
+  ModeOut: /Tstat_Testing/MODE_OUT
+  FanModeIn: /Tstat_Testing/FAN_MODE_IN
+  FanModeOut: /Tstat_Testing/FAN_MODE_OUT
+  TempOut: /Tstat_Testing/TEMP_OUT
+  RHOut: /Tstat_Testing/RH_OUT
+  DewpointOut: /Tstat_Testing/DEWPOINT_OUT

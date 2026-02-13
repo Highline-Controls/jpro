@@ -172,13 +172,19 @@ export default function Home() {
           <div className="flex justify-center">
             <TestNiagaraCard
               title="Card 1 (Niagara Test)"
-              setpointOrd={cfg.card1.setpoint}
-              zoneTempOrd={cfg.card1.ZoneTemp}
+              spInOrd={cfg.card1.SPIn}
+              spOutOrd={cfg.card1.SPOut}
+              ModeInOrd={cfg.card1.ModeIn}
+              ModeOutOrd={cfg.card1.ModeOut}
+              FanModeInOrd={cfg.card1.FanModeIn}
+              FanModeOutOrd={cfg.card1.FanModeOut}
+              TempOutOrd={cfg.card1.TempOut}
+              RHOutOrd={cfg.card1.RHOut}
+              DewpointOut={cfg.card1.DewpointOut}
               pollMs={2000}
-              debounceMs={600}
             />
           </div>
-          <div className="flex flex-wrap justify-center gap-4">
+          {/* <div className="flex flex-wrap justify-center gap-4">
             {row1.map((zone) => (
               <ZoneCard key={zone.unit} {...zone} />
             ))}
@@ -187,7 +193,7 @@ export default function Home() {
             {row2.map((zone) => (
               <ZoneCard key={zone.unit} {...zone} />
             ))}
-          </div>
+          </div> */}
           <div className="mt-4 flex justify-center">
             <button className="w-1/4 rounded border border-zinc-300 py-1.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
               Page 2

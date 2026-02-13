@@ -4,8 +4,15 @@ import * as yaml from "js-yaml";
 
 
 export type CardConfig = {
-  setpoint: string;
-  ZoneTemp: string;
+  SPIn: string;
+  SPOut: string;
+  ModeIn: string;
+  ModeOut: string;
+  FanModeIn: string;
+  FanModeOut: string;
+  TempOut: string;
+  RHOut: string;
+  DewpointOut: string;
 };
 
 export type AppConfig = {
