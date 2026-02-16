@@ -6,17 +6,13 @@ type Props = {
   title: string;
   spInOrd: string;
   spOutOrd: string;
-
   ModeInOrd: string;
   ModeOutOrd: string;
-
   FanModeInOrd: string;
   FanModeOutOrd: string;
-
   TempOutOrd: string;
   RHOutOrd: string;
   DewpointOut: string;
-
   pollMs?: number;
   debounceMs?: number;
 };

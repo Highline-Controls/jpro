@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as yaml from "js-yaml";
 
+import "server-only";
 
 export type CardConfig = {
   SPIn: string;

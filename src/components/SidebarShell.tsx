@@ -1,0 +1,66 @@
+"use client";
+
+import * as React from "react";
+import { AppBar, Box, IconButton, Toolbar, Typography } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Sidebar, Site } from "./Sidebar";
+
+export function SidebarShell({
+  sites,
+  initialSelectedSiteId,
+  children,
+}: {
+  sites: Site[];
+  initialSelectedSiteId: string;
+  children: React.ReactNode;
+}) {
+  const [selectedSiteId, setSelectedSiteId] = React.useState(
+    initialSelectedSiteId
+  );
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  const selectedName =
+    sites.find((s) => s.id === selectedSiteId)?.name ?? "Select a site";
+
+  return (
+    <Box sx={{ display: "flex" }}>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+      >
+        <Toolbar>
+          <IconButton
+            edge="start"
+            onClick={() => setMobileOpen(true)}
+            sx={{ mr: 1 }}
+            aria-label="open sidebar"
+          >
+            <MenuIcon />
+          </IconButton>
+
+          <Typography variant="h6" noWrap sx={{ flex: 1 }}>
+            {selectedName}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Sidebar
+        sites={sites}
+        selectedSiteId={selectedSiteId}
+        onSelectSite={(id) => setSelectedSiteId(id)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapsed={() => setCollapsed((v) => !v)}
+      />
+
+      <Box component="main" sx={{ flex: 1, minWidth: 0 }}>
+        {/* spacer for AppBar */}
+        <Toolbar />
+        {children}
+      </Box>
+    </Box>
+  );
+}
