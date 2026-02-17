@@ -64,6 +64,7 @@ export default function Home() {
               TempOutOrd={cfg.card1.TempOut}
               RHOutOrd={cfg.card1.RHOut}
               DewpointOut={cfg.card1.DewpointOut}
+              StatusOutOrd={cfg.card1.StatusOut}
               pollMs={2000}
             />
             </div>

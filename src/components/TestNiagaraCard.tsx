@@ -13,6 +13,7 @@ type Props = {
   TempOutOrd: string;
   RHOutOrd: string;
   DewpointOut: string;
+  StatusOutOrd: string;
   pollMs?: number;
   debounceMs?: number;
 };
@@ -40,13 +41,11 @@ async function parseResponse(r: Response): Promise<any> {
 function curValToNumber(v: CurVal): number | null {
   if (v === null || v === undefined) return null;
 
-  // quantity object: { value, unit }
   if (typeof v === "object") {
     const n = (v as any).value;
     return typeof n === "number" && Number.isFinite(n) ? n : null;
   }
 
-  // number or string
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
 }
@@ -57,7 +56,6 @@ function curValToString(v: CurVal): string | null {
   if (typeof v === "string") return v;
   if (typeof v === "number") return String(v);
 
-  // If backend ever returns something like {value, unit} for mode (unlikely)
   if (typeof v === "object" && "value" in v) {
     const vv = (v as any).value;
     if (vv === null || vv === undefined) return null;
@@ -75,10 +73,8 @@ function normalizeEnum<T extends string>(
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
-  // exact match
   if ((options as readonly string[]).includes(trimmed)) return trimmed as T;
 
-  // case-insensitive match
   const lower = trimmed.toLowerCase();
   const hit = options.find((o) => o.toLowerCase() === lower);
   return hit ?? null;
@@ -144,6 +140,16 @@ type ModeOption = (typeof MODE_OPTIONS)[number];
 const FAN_OPTIONS = ["On", "Auto", "Smart"] as const;
 type FanOption = (typeof FAN_OPTIONS)[number];
 
+const STATUS_OPTIONS = [
+  "Heating",
+  "Cooling",
+  "Dry",
+  "Fan",
+  "Satisfied",
+  "Off",
+] as const;
+type StatusOption = (typeof STATUS_OPTIONS)[number];
+
 const LiveReadout = memo(function LiveReadout({
   TempOutOrd,
   RHOutOrd,
@@ -151,10 +157,12 @@ const LiveReadout = memo(function LiveReadout({
   spOutOrd,
   ModeOutOrd,
   FanModeOutOrd,
+  StatusOutOrd,
   pollMs,
   onRemoteSetpoint,
   onRemoteMode,
   onRemoteFanMode,
+  onRemoteStatus,
 }: {
   TempOutOrd: string;
   RHOutOrd: string;
@@ -162,10 +170,12 @@ const LiveReadout = memo(function LiveReadout({
   spOutOrd: string;
   ModeOutOrd: string;
   FanModeOutOrd: string;
+  StatusOutOrd: string;
   pollMs: number;
   onRemoteSetpoint?: (sp: number | null) => void;
   onRemoteMode?: (m: ModeOption | null) => void;
   onRemoteFanMode?: (fm: FanOption | null) => void;
+  onRemoteStatus?: (s: StatusOption | null) => void;
 }) {
   const [zoneTemp, setZoneTemp] = useState<number | null>(null);
   const [rh, setRh] = useState<number | null>(null);
@@ -177,14 +187,16 @@ const LiveReadout = memo(function LiveReadout({
 
     async function tick() {
       try {
-        const [zt, rhv, dp, sp, modeRaw, fanRaw] = await Promise.all([
-          readPointNumber(TempOutOrd),
-          readPointNumber(RHOutOrd),
-          readPointNumber(DewpointOutOrd),
-          readPointNumber(spOutOrd),
-          readPointString(ModeOutOrd),
-          readPointString(FanModeOutOrd),
-        ]);
+        const [zt, rhv, dp, sp, modeRaw, fanRaw, statusRaw] =
+          await Promise.all([
+            readPointNumber(TempOutOrd),
+            readPointNumber(RHOutOrd),
+            readPointNumber(DewpointOutOrd),
+            readPointNumber(spOutOrd),
+            readPointString(ModeOutOrd),
+            readPointString(FanModeOutOrd),
+            readPointString(StatusOutOrd),
+          ]);
 
         if (!alive) return;
 
@@ -196,6 +208,7 @@ const LiveReadout = memo(function LiveReadout({
         onRemoteSetpoint?.(sp);
         onRemoteMode?.(normalizeEnum(modeRaw, MODE_OPTIONS));
         onRemoteFanMode?.(normalizeEnum(fanRaw, FAN_OPTIONS));
+        onRemoteStatus?.(normalizeEnum(statusRaw, STATUS_OPTIONS));
       } catch (e: any) {
         if (!alive) return;
         setError(e?.message ?? String(e));
@@ -216,9 +229,11 @@ const LiveReadout = memo(function LiveReadout({
     spOutOrd,
     ModeOutOrd,
     FanModeOutOrd,
+    StatusOutOrd,
     onRemoteSetpoint,
     onRemoteMode,
     onRemoteFanMode,
+    onRemoteStatus,
   ]);
 
   return (
@@ -256,12 +271,14 @@ export default function TestNiagaraCard({
   TempOutOrd,
   RHOutOrd,
   DewpointOut,
+  StatusOutOrd,
   pollMs = 2000,
   debounceMs = 600,
 }: Props) {
   const [uiSetpoint, setUiSetpoint] = useState<number>(0);
   const [mode, setMode] = useState<ModeOption>("Auto");
   const [fanmode, setFanMode] = useState<FanOption>("Auto");
+  const [status, setStatus] = useState<StatusOption | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const spDebounceTimer = useRef<any>(null);
@@ -288,6 +305,10 @@ export default function TestNiagaraCard({
     const recentlyEdited = Date.now() - lastFanEditAt.current < 1500;
     if (recentlyEdited) return;
     if (fm) setFanMode(fm);
+  }, []);
+
+  const handleRemoteStatus = useCallback((s: StatusOption | null) => {
+    setStatus(s);
   }, []);
 
   function bump(delta: number) {
@@ -348,8 +369,23 @@ export default function TestNiagaraCard({
     };
   }, []);
 
+const glowClass =
+  status === "Heating"
+    ? "ring-2 ring-red-500/70 glow-pulse-red"
+    : status === "Cooling"
+      ? "ring-2 ring-blue-500/70 glow-pulse-blue"
+      : status &&
+          (status === "Dry" ||
+            status === "Fan" ||
+            status === "Satisfied" ||
+            status === "Off")
+        ? "ring-2 ring-zinc-500/50 glow-pulse-gray"
+        : "";
+
   return (
-    <div className="w-[260px] rounded-2xl bg-zinc-900 text-zinc-100 p-5 shadow-lg">
+    <div
+      className={`w-[260px] rounded-2xl bg-zinc-900 text-zinc-100 p-5 shadow-lg ${glowClass}`}
+    >
       <div className="text-xs tracking-widest text-zinc-400">
         {title.toUpperCase()}
       </div>
@@ -384,10 +420,12 @@ export default function TestNiagaraCard({
         spOutOrd={spOutOrd}
         ModeOutOrd={ModeOutOrd}
         FanModeOutOrd={FanModeOutOrd}
+        StatusOutOrd={StatusOutOrd}
         pollMs={pollMs}
         onRemoteSetpoint={handleRemoteSetpoint}
         onRemoteMode={handleRemoteMode}
         onRemoteFanMode={handleRemoteFanMode}
+        onRemoteStatus={handleRemoteStatus}
       />
 
       <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">

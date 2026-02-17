@@ -8,3 +8,4 @@ card1:
   TempOut: /Tstat_Testing/TEMP_OUT
   RHOut: /Tstat_Testing/RH_OUT
   DewpointOut: /Tstat_Testing/DEWPOINT_OUT
+  StatusOut: /Tstat_Testing/STATUS_OUT

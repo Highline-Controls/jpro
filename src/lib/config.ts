@@ -14,6 +14,7 @@ export type CardConfig = {
   TempOut: string;
   RHOut: string;
   DewpointOut: string;
+  StatusOut: string;
 };
 
 export type AppConfig = {
