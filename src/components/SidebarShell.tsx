@@ -8,17 +8,34 @@ import { Sidebar, Site } from "./Sidebar";
 export function SidebarShell({
   sites,
   initialSelectedSiteId,
+  selectedSiteId: controlledSelectedSiteId,
+  onSelectSite: controlledOnSelectSite,
   children,
 }: {
   sites: Site[];
   initialSelectedSiteId: string;
+
+  // Optional controlled mode:
+  selectedSiteId?: string;
+  onSelectSite?: (id: string) => void;
+
   children: React.ReactNode;
 }) {
-  const [selectedSiteId, setSelectedSiteId] = React.useState(
+  const [internalSelectedSiteId, setInternalSelectedSiteId] = React.useState(
     initialSelectedSiteId
   );
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
+
+  const selectedSiteId = controlledSelectedSiteId ?? internalSelectedSiteId;
+
+  const setSelectedSiteId = React.useCallback(
+    (id: string) => {
+      if (controlledOnSelectSite) controlledOnSelectSite(id);
+      else setInternalSelectedSiteId(id);
+    },
+    [controlledOnSelectSite]
+  );
 
   const selectedName =
     sites.find((s) => s.id === selectedSiteId)?.name ?? "Select a site";
@@ -49,7 +66,7 @@ export function SidebarShell({
       <Sidebar
         sites={sites}
         selectedSiteId={selectedSiteId}
-        onSelectSite={(id) => setSelectedSiteId(id)}
+        onSelectSite={setSelectedSiteId}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
         collapsed={collapsed}
@@ -57,7 +74,6 @@ export function SidebarShell({
       />
 
       <Box component="main" sx={{ flex: 1, minWidth: 0 }}>
-        {/* spacer for AppBar */}
         <Toolbar />
         {children}
       </Box>

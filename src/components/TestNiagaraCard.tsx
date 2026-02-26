@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, memo, useCallback } from "react";
 
 type Props = {
+  /** The site slug used for site-scoped BFF routes: /api/sites/:slug/... */
+  siteSlug: string;
   title: string;
   spInOrd: string;
   spOutOrd: string;
@@ -80,10 +82,14 @@ function normalizeEnum<T extends string>(
   return hit ?? null;
 }
 
-async function readRaw(pointOrd: string): Promise<any> {
+function sitePrefix(siteSlug: string): string {
+  return `/api/sites/${encodeURIComponent(siteSlug)}`;
+}
+
+async function readRaw(siteSlug: string, pointOrd: string): Promise<any> {
   const r = await fetch(
-    `/api/niagara/read?point_ord=${encodeURIComponent(pointOrd)}`,
-    { cache: "no-store" }
+    `${sitePrefix(siteSlug)}/read?point_ord=${encodeURIComponent(pointOrd)}`,
+    { cache: "no-store", credentials: "include" }
   );
 
   const data = await parseResponse(r);
@@ -99,22 +105,33 @@ async function readRaw(pointOrd: string): Promise<any> {
   return data;
 }
 
-async function readPointNumber(pointOrd: string): Promise<number | null> {
-  const data = await readRaw(pointOrd);
+async function readPointNumber(
+  siteSlug: string,
+  pointOrd: string
+): Promise<number | null> {
+  const data = await readRaw(siteSlug, pointOrd);
   const v: CurVal = (data as any)?.curVal;
   return curValToNumber(v);
 }
 
-async function readPointString(pointOrd: string): Promise<string | null> {
-  const data = await readRaw(pointOrd);
+async function readPointString(
+  siteSlug: string,
+  pointOrd: string
+): Promise<string | null> {
+  const data = await readRaw(siteSlug, pointOrd);
   const v: CurVal = (data as any)?.curVal;
   return curValToString(v);
 }
 
-async function writePoint(pointOrd: string, value: number | string) {
-  const r = await fetch("/api/niagara/write", {
+async function writePoint(
+  siteSlug: string,
+  pointOrd: string,
+  value: number | string
+) {
+  const r = await fetch(`${sitePrefix(siteSlug)}/write`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       point_ord: pointOrd,
       value,
@@ -151,6 +168,7 @@ const STATUS_OPTIONS = [
 type StatusOption = (typeof STATUS_OPTIONS)[number];
 
 const LiveReadout = memo(function LiveReadout({
+  siteSlug,
   TempOutOrd,
   RHOutOrd,
   DewpointOutOrd,
@@ -164,6 +182,7 @@ const LiveReadout = memo(function LiveReadout({
   onRemoteFanMode,
   onRemoteStatus,
 }: {
+  siteSlug: string;
   TempOutOrd: string;
   RHOutOrd: string;
   DewpointOutOrd: string;
@@ -189,13 +208,13 @@ const LiveReadout = memo(function LiveReadout({
       try {
         const [zt, rhv, dp, sp, modeRaw, fanRaw, statusRaw] =
           await Promise.all([
-            readPointNumber(TempOutOrd),
-            readPointNumber(RHOutOrd),
-            readPointNumber(DewpointOutOrd),
-            readPointNumber(spOutOrd),
-            readPointString(ModeOutOrd),
-            readPointString(FanModeOutOrd),
-            readPointString(StatusOutOrd),
+            readPointNumber(siteSlug, TempOutOrd),
+            readPointNumber(siteSlug, RHOutOrd),
+            readPointNumber(siteSlug, DewpointOutOrd),
+            readPointNumber(siteSlug, spOutOrd),
+            readPointString(siteSlug, ModeOutOrd),
+            readPointString(siteSlug, FanModeOutOrd),
+            readPointString(siteSlug, StatusOutOrd),
           ]);
 
         if (!alive) return;
@@ -223,6 +242,7 @@ const LiveReadout = memo(function LiveReadout({
     };
   }, [
     pollMs,
+    siteSlug,
     TempOutOrd,
     RHOutOrd,
     DewpointOutOrd,
@@ -261,6 +281,7 @@ const LiveReadout = memo(function LiveReadout({
 });
 
 export default function TestNiagaraCard({
+  siteSlug,
   title,
   spInOrd,
   spOutOrd,
@@ -321,7 +342,7 @@ export default function TestNiagaraCard({
     if (spDebounceTimer.current) clearTimeout(spDebounceTimer.current);
     spDebounceTimer.current = setTimeout(async () => {
       try {
-        await writePoint(spInOrd, next);
+        await writePoint(siteSlug, spInOrd, next);
         setError(null);
       } catch (e: any) {
         setError(e?.message ?? String(e));
@@ -337,7 +358,7 @@ export default function TestNiagaraCard({
     if (modeDebounceTimer.current) clearTimeout(modeDebounceTimer.current);
     modeDebounceTimer.current = setTimeout(async () => {
       try {
-        await writePoint(ModeInOrd, next);
+        await writePoint(siteSlug, ModeInOrd, next);
         setError(null);
       } catch (e: any) {
         setError(e?.message ?? String(e));
@@ -353,7 +374,7 @@ export default function TestNiagaraCard({
     if (fanDebounceTimer.current) clearTimeout(fanDebounceTimer.current);
     fanDebounceTimer.current = setTimeout(async () => {
       try {
-        await writePoint(FanModeInOrd, next);
+        await writePoint(siteSlug, FanModeInOrd, next);
         setError(null);
       } catch (e: any) {
         setError(e?.message ?? String(e));
@@ -369,18 +390,18 @@ export default function TestNiagaraCard({
     };
   }, []);
 
-const glowClass =
-  status === "Heating"
-    ? "ring-2 ring-red-500/70 glow-pulse-red"
-    : status === "Cooling"
+  const glowClass =
+    status === "Heating"
+      ? "ring-2 ring-red-500/70 glow-pulse-red"
+      : status === "Cooling"
       ? "ring-2 ring-blue-500/70 glow-pulse-blue"
       : status &&
-          (status === "Dry" ||
-            status === "Fan" ||
-            status === "Satisfied" ||
-            status === "Off")
-        ? "ring-2 ring-zinc-500/50 glow-pulse-gray"
-        : "";
+        (status === "Dry" ||
+          status === "Fan" ||
+          status === "Satisfied" ||
+          status === "Off")
+      ? "ring-2 ring-zinc-500/50 glow-pulse-gray"
+      : "";
 
   return (
     <div
@@ -414,6 +435,7 @@ const glowClass =
       </div>
 
       <LiveReadout
+        siteSlug={siteSlug}
         TempOutOrd={TempOutOrd}
         RHOutOrd={RHOutOrd}
         DewpointOutOrd={DewpointOut}
