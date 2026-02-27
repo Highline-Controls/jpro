@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { theme } from "./theme";
 
 export type BffSite = { slug: string; name: string };
 
@@ -130,5 +132,10 @@ export function useAuth() {
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>{children}</AuthProvider>
+    </ThemeProvider>
+  );
 }

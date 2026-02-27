@@ -6,7 +6,7 @@ import { useAuth } from "./providers";
 import { SidebarShell } from "@/components/SidebarShell";
 import type { Site as SidebarSite } from "@/components/Sidebar";
 
-import ThermostatCarousel from "@/components/ThermostatCarousel";
+import ResponsiveThermostatView from "@/components/ResponsiveThermostatView";
 import TestNiagaraCard from "@/components/TestNiagaraCard";
 import ZoneCard from "@/components/ZoneCard";
 
@@ -93,9 +93,7 @@ export default function Page() {
         setLoadingCfg(true);
         setCfgError(null);
 
-        const cfg = (await fetchJson(
-          `/api/sites/${encodeURIComponent(selectedSiteId)}/config`
-        )) as SiteConfigDoc;
+        const cfg = (await fetchJson(`/api/sites/${encodeURIComponent(selectedSiteId)}/config`)) as SiteConfigDoc;
 
         if (!alive) return;
         setSelectedConfig(cfg);
@@ -156,6 +154,7 @@ export default function Page() {
       initialSelectedSiteId={initialId}
       selectedSiteId={selectedSiteId || initialId}
       onSelectSite={(id) => setSelectedSiteId(id)}
+      onLogout={logout}
     >
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -163,34 +162,27 @@ export default function Page() {
             <div className="text-sm opacity-70">Signed in as</div>
             <div className="truncate font-medium">{state.email}</div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button onClick={refresh} className="rounded-md border px-3 py-2 text-sm hover:bg-black/5">
-              Refresh
-            </button>
-            <button onClick={logout} className="rounded-md bg-black px-3 py-2 text-sm text-white hover:opacity-90">
-              Logout
-            </button>
-          </div>
         </div>
 
-        <div className="rounded-xl border p-4">
+        <div className="h-[calc(100svh-56px)] md:h-[calc(100svh-64px)] overflow-hidden px-4 py-4">
           {loadingCfg ? (
-            <div className="opacity-70">Loading site config…</div>
+            <div className="flex h-full items-center justify-center opacity-70">Loading site config…</div>
           ) : cfgError ? (
-            <div className="text-red-500">
-              Error: {cfgError}
-              <div className="mt-2 text-sm opacity-70">
-                Make sure this works in browser:
-                <span className="ml-2 font-mono">/api/sites/{selectedSiteId}/config</span>
+            <div className="flex h-full items-center justify-center">
+              <div className="text-red-500">
+                Error: {cfgError}
+                <div className="mt-2 text-sm opacity-70">
+                  Make sure this works in browser:
+                  <span className="ml-2 font-mono">/api/sites/{selectedSiteId}/config</span>
+                </div>
               </div>
             </div>
           ) : !selectedConfig ? (
-            <div className="opacity-70">No config loaded.</div>
+            <div className="flex h-full items-center justify-center opacity-70">No config loaded.</div>
           ) : (
-            <div className="h-[calc(100vh-220px)]">
-              <ThermostatCarousel>
-                {realTstats.map((t) => (
+            <ResponsiveThermostatView>
+              {realTstats.map((t) => (
+                <div key={`real-wrap-${selectedConfig.slug}-${t.id}`} className="flex justify-center">
                   <TestNiagaraCard
                     key={`real-${selectedConfig.slug}-${t.id}`}
                     siteSlug={selectedConfig.slug}
@@ -206,9 +198,11 @@ export default function Page() {
                     DewpointOut={t.points.dewpointOut}
                     StatusOutOrd={t.points.statusOut}
                   />
-                ))}
+                </div>
+              ))}
 
-                {FAKE_ZONES.map((z) => (
+              {FAKE_ZONES.map((z) => (
+                <div key={`fake-wrap-${selectedConfig.slug}-${z.unit}-${z.title}`} className="flex justify-center">
                   <ZoneCard
                     key={`fake-${selectedConfig.slug}-${z.unit}-${z.title}`}
                     title={z.title}
@@ -219,9 +213,9 @@ export default function Page() {
                     unitStatus={z.unitStatus}
                     supply={z.supply}
                   />
-                ))}
-              </ThermostatCarousel>
-            </div>
+                </div>
+              ))}
+            </ResponsiveThermostatView>
           )}
         </div>
       </div>

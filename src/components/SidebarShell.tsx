@@ -1,31 +1,46 @@
 "use client";
 
 import * as React from "react";
-import { AppBar, Box, IconButton, Toolbar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  IconButton,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Sidebar, Site } from "./Sidebar";
+import { DRAWER_WIDTH, MINI_WIDTH, Sidebar, Site } from "./Sidebar";
 
 export function SidebarShell({
   sites,
   initialSelectedSiteId,
   selectedSiteId: controlledSelectedSiteId,
   onSelectSite: controlledOnSelectSite,
+  onLogout,
   children,
 }: {
   sites: Site[];
   initialSelectedSiteId: string;
 
-  // Optional controlled mode:
   selectedSiteId?: string;
   onSelectSite?: (id: string) => void;
 
+  onLogout?: () => void;
+
   children: React.ReactNode;
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [internalSelectedSiteId, setInternalSelectedSiteId] = React.useState(
     initialSelectedSiteId
   );
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
+
+  const sidebarWidth = collapsed ? MINI_WIDTH : DRAWER_WIDTH;
 
   const selectedSiteId = controlledSelectedSiteId ?? internalSelectedSiteId;
 
@@ -45,17 +60,29 @@ export function SidebarShell({
       <AppBar
         position="fixed"
         elevation={0}
-        sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+        sx={{
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          zIndex: (t) => t.zIndex.drawer + 1,
+          ...(isMobile
+            ? {}
+            : {
+                width: `calc(100% - ${sidebarWidth}px)`,
+                ml: `${sidebarWidth}px`,
+              }),
+        }}
       >
         <Toolbar>
-          <IconButton
-            edge="start"
-            onClick={() => setMobileOpen(true)}
-            sx={{ mr: 1 }}
-            aria-label="open sidebar"
-          >
-            <MenuIcon />
-          </IconButton>
+          {isMobile && (
+            <IconButton
+              edge="start"
+              onClick={() => setMobileOpen(true)}
+              sx={{ mr: 1 }}
+              aria-label="open sidebar"
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
 
           <Typography variant="h6" noWrap sx={{ flex: 1 }}>
             {selectedName}
@@ -71,6 +98,7 @@ export function SidebarShell({
         onMobileClose={() => setMobileOpen(false)}
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((v) => !v)}
+        onLogout={onLogout}
       />
 
       <Box component="main" sx={{ flex: 1, minWidth: 0 }}>

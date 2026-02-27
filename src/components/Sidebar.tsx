@@ -20,11 +20,13 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import SettingsIcon from "@mui/icons-material/Settings";
 import StarIcon from "@mui/icons-material/Star";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 export type Site = { id: string; name: string };
 
-const DRAWER_WIDTH = 280;
-const MINI_WIDTH = 76;
+// Exported so SidebarShell can correctly offset the AppBar/content on desktop.
+export const DRAWER_WIDTH = 280;
+export const MINI_WIDTH = 76;
 
 export function Sidebar({
   sites,
@@ -34,6 +36,7 @@ export function Sidebar({
   onMobileClose,
   collapsed,
   onToggleCollapsed,
+  onLogout,
 }: {
   sites: Site[];
   selectedSiteId: string;
@@ -46,6 +49,9 @@ export function Sidebar({
   // desktop controls (parent owns collapsed state)
   collapsed: boolean;
   onToggleCollapsed: () => void;
+
+  // optional action
+  onLogout?: () => void;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -53,7 +59,7 @@ export function Sidebar({
   const width = collapsed ? MINI_WIDTH : DRAWER_WIDTH;
 
   const content = (
-    <Box sx={{ width }}>
+    <Box sx={{ width, height: "100%", display: "flex", flexDirection: "column" }}>
       <Toolbar
         sx={{
           px: 1,
@@ -160,12 +166,34 @@ export function Sidebar({
             </ListItemIcon>
             {!collapsed && <ListItemText primary="Settings" />}
           </ListItemButton>
+
+          {onLogout && (
+            <ListItemButton
+              onClick={onLogout}
+              sx={{
+                mx: 1,
+                my: 0.5,
+                borderRadius: 2,
+                justifyContent: collapsed ? "center" : "flex-start",
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: collapsed ? 0 : 1.5,
+                  justifyContent: "center",
+                }}
+              >
+                <LogoutIcon />
+              </ListItemIcon>
+              {!collapsed && <ListItemText primary="Logout" />}
+            </ListItemButton>
+          )}
         </List>
       </Box>
     </Box>
   );
 
-  // mobile: overlay drawer
   if (isMobile) {
     return (
       <SwipeableDrawer
@@ -180,7 +208,6 @@ export function Sidebar({
     );
   }
 
-  // desktop: permanent drawer
   return (
     <Drawer
       variant="permanent"
